@@ -46,6 +46,21 @@ Composerや大型フレームワークは不要です。
 
 `config/` と `storage/` には直アクセス防止用の `.htaccess` を同梱しています。Nginx等で運用する場合は同等のアクセス制限を設定してください。
 
+
+## XAMPP向けローカル起動
+
+このブランチでは `config/config.php` をXAMPP向けの初期設定にしています。
+
+- DBホスト: `localhost`
+- DB名: `livedoor_antenna`
+- DBユーザー: `root`
+- DBパスワード: 空
+- 初期管理者: `admin` / `admin`
+
+`auto_setup` が有効なため、初回アクセス時にDB、テーブル、基本設定、初期管理者を自動作成します。XAMPPのMySQLを起動してから `/admin/` にアクセスしてください。
+
+サーバーへ移行する際は、`config/config.php` のDB接続情報、初期管理者、`auto_setup` の扱いを本番環境に合わせて変更してください。
+
 ## 初期設定
 
 管理画面の「基本設定」から以下を設定できます。
