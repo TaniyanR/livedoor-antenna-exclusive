@@ -1,0 +1,1 @@
+<?php require_once __DIR__.'/../app/poster.php'; try{$id=run_post(); cleanup_history(); set_setting('last_post_cron',date('Y-m-d H:i:s')); log_event('info','投稿Cron完了','post_id='.$id); echo "OK\n";}catch(Throwable $e){log_event('error','投稿Cronエラー',$e->getMessage()); http_response_code(500); echo "ERROR\n";}
