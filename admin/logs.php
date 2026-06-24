@@ -1,0 +1,1 @@
+<?php require_once __DIR__.'/../app/bootstrap.php'; admin_header('ログ'); echo'<table><tr><th>日時</th><th>レベル</th><th>内容</th><th>詳細</th></tr>'; foreach(db()->query('SELECT * FROM logs ORDER BY id DESC LIMIT 200') as $l) echo'<tr><td>'.e($l['created_at']).'</td><td>'.e($l['level']).'</td><td>'.e($l['message']).'</td><td>'.e($l['context']).'</td></tr>'; echo'</table>'; admin_footer();
