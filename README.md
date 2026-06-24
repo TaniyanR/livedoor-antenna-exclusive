@@ -52,12 +52,12 @@ Composerや大型フレームワークは不要です。
 このブランチでは `config/config.php` をXAMPP向けの初期設定にしています。
 
 - DBホスト: `localhost`
-- DB名: `livedoor_antenna`
+- DB名: `livedoor-antenna`
 - DBユーザー: `root`
 - DBパスワード: 空
 - 初期管理者: `admin` / `admin`
 
-`auto_setup` が有効なため、初回アクセス時にDB、テーブル、基本設定、初期管理者を自動作成します。XAMPPのMySQLを起動してから `/admin/` にアクセスしてください。
+`auto_setup` が有効なため、初回アクセス時にDB、テーブル、基本設定、初期管理者を自動作成します。XAMPPのMySQLを起動してから、リポジトリを配置したディレクトリに合わせて `http://localhost/livedoor-antenna/admin/` のように **http** でアクセスしてください。Windowsでは、リポジトリ直下の `open-localhost.bat` をダブルクリックすると現在のフォルダ名を使った `http://localhost/{フォルダ名}/index.php` を開けます。Chromeで `https://localhost/...` を開くと、PHPやDBへ到達する前にブラウザがローカル証明書を検証して「プライバシー エラー」を表示します。その画面が出ている場合はURL欄の `https://` を `http://` に変更してください。 phpMyAdminで確認する場合も `livedoor-antenna` データベースを開いてください。初回のHTTPアクセス時にテーブルが自動作成されます。 まず状態確認をする場合は `http://localhost/livedoor-antenna/setup_check.php` を開くと、アクセス方式、DB接続、テーブル作成状況を確認できます。
 
 サーバーへ移行する際は、`config/config.php` のDB接続情報、初期管理者、`auto_setup` の扱いを本番環境に合わせて変更してください。
 
