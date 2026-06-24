@@ -57,7 +57,7 @@ Composerや大型フレームワークは不要です。
 - DBパスワード: 空
 - 初期管理者: `admin` / `admin`
 
-`auto_setup` が有効なため、初回アクセス時にDB、テーブル、基本設定、初期管理者を自動作成します。XAMPPのMySQLを起動してから、リポジトリを配置したディレクトリに合わせて `http://localhost/livedoor-antenna/admin/` のように **http** でアクセスしてください。Chromeで `https://localhost/...` を開くとローカル証明書がないため「プライバシー エラー」が表示されます。
+`auto_setup` が有効なため、初回アクセス時にDB、テーブル、基本設定、初期管理者を自動作成します。XAMPPのMySQLを起動してから、リポジトリを配置したディレクトリに合わせて `http://localhost/livedoor-antenna/admin/` のように **http** でアクセスしてください。Windowsでは、リポジトリ直下の `open-localhost.bat` をダブルクリックすると現在のフォルダ名を使った `http://localhost/{フォルダ名}/index.php` を開けます。Chromeで `https://localhost/...` を開くと、PHPやDBへ到達する前にブラウザがローカル証明書を検証して「プライバシー エラー」を表示します。その画面が出ている場合はURL欄の `https://` を `http://` に変更してください。
 
 サーバーへ移行する際は、`config/config.php` のDB接続情報、初期管理者、`auto_setup` の扱いを本番環境に合わせて変更してください。
 
