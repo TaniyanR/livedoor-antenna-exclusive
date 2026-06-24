@@ -2,7 +2,7 @@
 return [
     'db' => [
         'host' => 'localhost',
-        'name' => 'livedoor_antenna',
+        'name' => 'livedoor-antenna',
         'user' => 'root',
         'pass' => '',
     ],
