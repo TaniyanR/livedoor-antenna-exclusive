@@ -11,6 +11,8 @@ function auto_setup(PDO $pdo,array $config): void { require_once __DIR__.'/schem
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function base_path(): string { $script=(string)($_SERVER['SCRIPT_NAME']??''); foreach(['/admin/','/install/','/cron/'] as $dir){ $pos=strpos($script,$dir); if($pos!==false) return rtrim(substr($script,0,$pos),'/'); } return rtrim(str_replace('\\','/',dirname($script)),'/'); }
 function app_url(string $path): string { return base_path().'/'.ltrim($path,'/'); }
+function request_scheme(): string { $https=strtolower((string)($_SERVER['HTTPS']??'')); return $https!==''&&$https!=='off'?'https':'http'; }
+function app_absolute_url(string $path): string { return request_scheme().'://'.($_SERVER['HTTP_HOST']??'localhost').app_url($path); }
 function redirect(string $url): never { header('Location: '.(str_starts_with($url,'/')?app_url($url):$url)); exit; }
 function csrf_token(): string { if(empty($_SESSION['csrf'])) $_SESSION['csrf']=bin2hex(random_bytes(32)); return $_SESSION['csrf']; }
 function verify_csrf(): void { if(($_POST['csrf']??'')!==($_SESSION['csrf']??'')){ http_response_code(400); exit('CSRF token mismatch'); } }
