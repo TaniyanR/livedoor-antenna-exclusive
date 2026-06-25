@@ -55,7 +55,7 @@ Composerや大型フレームワークは不要です。
 - DB名: `livedoor_antenna`
 - DBユーザー: `root`
 - DBパスワード: 空
-- 初期管理者: `admin` / `admin`
+- 初期管理者: `admin` / `password`
 
 `auto_setup` が有効なため、初回アクセス時にDB、テーブル、基本設定、初期管理者を自動作成します。XAMPPのMySQLを起動してから、リポジトリをXAMPPのサブディレクトリに置いた場合は `http://localhost/livedoor-antenna/` または `http://localhost/livedoor-antenna/admin/` にアクセスしてください。ローカルXAMPP標準設定では `https://localhost/...` ではなく `http://localhost/...` を使用します。
 

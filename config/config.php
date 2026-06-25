@@ -9,7 +9,7 @@ return [
     'auto_setup' => true,
     'admin' => [
         'username' => 'admin',
-        'password' => 'admin',
+        'password' => 'password',
     ],
     'settings' => [
         'site_name' => 'livedoorアンテナ',
