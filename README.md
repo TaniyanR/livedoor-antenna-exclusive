@@ -90,7 +90,7 @@ AtomPub投稿URLの形式は次の通りです。
 https://livedoor.blogcms.jp/atompub/{BLOG_NAME}/article
 ```
 
-`{BLOG_NAME}` はブログURLのID部分に置き換えてください。APIキーやパスワードはパスワード入力欄として扱い、保存済み値を画面上にそのまま露出しません。
+`{BLOG_NAME}` はブログURLのID部分に置き換えてください。Basic認証はlivedoor Blog AtomPub APIの仕様に合わせてHTTPS URLのみを受け付けます。WSSE認証では `Authorization: WSSE profile="UsernameToken"` と `X-WSSE` ヘッダーを送信します。APIキーやパスワードはパスワード入力欄として扱い、保存済み値を画面上にそのまま露出しません。
 
 ## RSS登録方法
 
