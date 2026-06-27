@@ -32,8 +32,8 @@ Composerや大型フレームワークは不要です。
 1. リポジトリをサーバーへアップロードします。
 2. Web公開ディレクトリからこのリポジトリの `index.php` が表示されるように配置します。
 3. ブラウザで設置URLへアクセスします。
-4. `config/config.php` が存在しない場合、自動的に `/install/` へ移動します。
-5. インストーラーで以下を入力します。
+4. 初回アクセス時は自動的に `/install/` へ移動します。
+5. インストーラーで最初に以下のDB情報を入力します。DBが存在しない場合は、権限があれば自動作成します。
    - DBホスト
    - DB名
    - DBユーザー
@@ -49,7 +49,7 @@ Composerや大型フレームワークは不要です。
 
 ## XAMPP向けローカル起動
 
-このブランチでは `config/config.php` をXAMPP向けの初期設定にしています。
+このブランチでは `config/config.php` を同梱していません。初回アクセス時にインストーラーでXAMPP向けのDB情報を入力してください。
 
 - DBホスト: `localhost`
 - DB名: `livedoor_antenna`
@@ -57,9 +57,9 @@ Composerや大型フレームワークは不要です。
 - DBパスワード: 空
 - 初期管理者: `admin` / `password`
 
-`auto_setup` が有効なため、初回アクセス時にDB、テーブル、基本設定、初期管理者を自動作成します。XAMPPのMySQLを起動してから、リポジトリをXAMPPのサブディレクトリに置いた場合は `http://localhost/livedoor-antenna/` または `http://localhost/livedoor-antenna/admin/` にアクセスしてください。ローカルXAMPP標準設定では `https://localhost/...` ではなく `http://localhost/...` を使用します。
+インストーラーがDB、テーブル、基本設定、初期管理者を自動作成します。XAMPPのMySQLを起動してから、リポジトリをXAMPPのサブディレクトリに置いた場合は `http://localhost/livedoor-antenna/` または `http://localhost/livedoor-antenna/admin/` にアクセスしてください。ローカルXAMPP標準設定では `https://localhost/...` ではなく `http://localhost/...` を使用します。
 
-サーバーへ移行する際は、`config/config.php` のDB接続情報、初期管理者、`auto_setup` の扱いを本番環境に合わせて変更してください。
+サーバーへ移行する際は、本番環境で `/install/` を開き、サーバーのDB接続情報を入力してください。生成された `config/config.php` はアップロード先の環境に合わせて管理してください。
 
 ## 初期設定
 
