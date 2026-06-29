@@ -1,1 +1,21 @@
-<?php require_once __DIR__.'/../app/bootstrap.php'; if($_SERVER['REQUEST_METHOD']==='POST'){verify_csrf(); if(isset($_POST['all'])) db()->exec('DELETE FROM post_history'); elseif(isset($_POST['ids'])) foreach((array)$_POST['ids'] as $id) db()->prepare('DELETE FROM post_history WHERE id=?')->execute([$id]);} admin_header('投稿履歴'); echo'<form method=post><input type=hidden name=csrf value='.csrf_token().'><table><tr><th></th><th>投稿日時</th><th>タイトル</th><th>URL</th><th>件数</th><th>結果</th><th>エラー</th></tr>'; foreach(db()->query('SELECT * FROM post_history ORDER BY posted_at DESC LIMIT 100') as $p) echo'<tr><td><input type=checkbox name="ids[]" value='.$p['id'].'></td><td>'.e($p['posted_at']).'</td><td>'.e($p['main_title']).'</td><td><a href="'.e($p['livedoor_url']).'" target=_blank>'.e($p['livedoor_url']).'</a></td><td>'.e($p['article_count']).'</td><td>'.e($p['result']).'</td><td>'.e($p['error']).'</td></tr>'; echo'</table><button class=danger>選択削除</button> <button class=danger name=all value=1>全削除</button></form>'; admin_footer();
+<?php
+require_once __DIR__.'/../app/bootstrap.php';
+
+if($_SERVER['REQUEST_METHOD']==='POST'){
+    verify_csrf();
+    if(isset($_POST['all'])){
+        db()->exec('DELETE FROM post_items');
+        db()->exec('DELETE FROM post_history');
+    } elseif(isset($_POST['ids'])){
+        foreach((array)$_POST['ids'] as $id){
+            db()->prepare('DELETE FROM post_items WHERE post_id=?')->execute([$id]);
+            db()->prepare('DELETE FROM post_history WHERE id=?')->execute([$id]);
+        }
+    }
+}
+
+admin_header('投稿履歴');
+echo'<form method=post><input type=hidden name=csrf value='.csrf_token().'><table><tr><th></th><th>投稿日時</th><th>タイトル</th><th>URL</th><th>件数</th><th>結果</th><th>エラー</th></tr>';
+foreach(db()->query('SELECT * FROM post_history ORDER BY posted_at DESC LIMIT 100') as $p) echo'<tr><td><input type=checkbox name="ids[]" value='.$p['id'].'></td><td>'.e($p['posted_at']).'</td><td>'.e($p['main_title']).'</td><td><a href="'.e($p['livedoor_url']).'" target=_blank>'.e($p['livedoor_url']).'</a></td><td>'.e($p['article_count']).'</td><td>'.e($p['result']).'</td><td>'.e($p['error']).'</td></tr>';
+echo'</table><button class=danger>選択削除</button> <button class=danger name=all value=1>全削除</button></form>';
+admin_footer();

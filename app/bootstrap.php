@@ -4,9 +4,11 @@ const APP_ROOT = __DIR__ . '/..';
 const CONFIG_FILE = APP_ROOT . '/config/config.php';
 const LOG_FILE = APP_ROOT . '/storage/logs/app.log';
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
-function installed(): bool { return is_file(CONFIG_FILE); }
-function app_config(): array { return installed() ? require CONFIG_FILE : []; }
+function config_file_exists(): bool { return is_file(CONFIG_FILE); }
+function app_config(): array { $config=config_file_exists() ? require CONFIG_FILE : []; return is_array($config) ? $config : []; }
 function db_config(): array { return app_config()['db'] ?? []; }
+function has_db_config(): bool { $c=db_config(); foreach(['host','name','user'] as $key){ if(!isset($c[$key])||$c[$key]==='') return false; } return true; }
+function installed(): bool { return config_file_exists() && has_db_config(); }
 function db(): PDO { static $pdo; if ($pdo) return $pdo; $config=app_config(); $c=$config['db']??[]; foreach(['host','name','user'] as $key){ if(!isset($c[$key])||$c[$key]==='') throw new RuntimeException('DB設定が不足しています。インストーラーで設定し直してください。'); } $pass=(string)($c['pass']??''); if(!empty($config['auto_setup'])){ $server=new PDO('mysql:host='.$c['host'].';charset=utf8mb4',(string)$c['user'],$pass,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]); $server->exec('CREATE DATABASE IF NOT EXISTS `'.str_replace('`','``',(string)$c['name']).'` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'); } $dsn='mysql:host='.$c['host'].';dbname='.$c['name'].';charset=utf8mb4'; $pdo=new PDO($dsn,(string)$c['user'],$pass,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC]); if(!empty($config['auto_setup'])) auto_setup($pdo,$config); return $pdo; }
 function database_available(): bool { try { db(); return true; } catch (Throwable $e) { return false; } }
 function database_error_message(Throwable $e): string { return 'DBへ接続できません。config/config.php のDBホスト・DB名・DBユーザー・DBパスワードをサーバーの情報に合わせて修正するか、/install/ から設定し直してください。'; }
@@ -20,7 +22,7 @@ function redirect(string $url): never { header('Location: '.(str_starts_with($ur
 function csrf_token(): string { if(empty($_SESSION['csrf'])) $_SESSION['csrf']=bin2hex(random_bytes(32)); return $_SESSION['csrf']; }
 function verify_csrf(): void { if(($_POST['csrf']??'')!==($_SESSION['csrf']??'')){ http_response_code(400); exit('CSRF token mismatch'); } }
 function is_admin(): bool { return !empty($_SESSION['admin_id']); }
-function require_admin(): void { if(!is_admin()) redirect('/admin/login.php'); }
+function require_admin(): void { if(!installed()) redirect('/install/'); if(!is_admin()) redirect('/admin/login.php'); }
 function setting(string $key, $default=null){ $st=db()->prepare('SELECT value FROM settings WHERE name=?'); $st->execute([$key]); $v=$st->fetchColumn(); return $v===false?$default:$v; }
 function set_setting(string $key, string $value): void { $st=db()->prepare('INSERT INTO settings(name,value) VALUES(?,?) ON DUPLICATE KEY UPDATE value=VALUES(value)'); $st->execute([$key,$value]); }
 function log_event(string $level,string $message,string $context=''): void { @file_put_contents(LOG_FILE, '['.date('c')."] $level $message $context\n", FILE_APPEND); if(installed()){ try{ $st=db()->prepare('INSERT INTO logs(level,message,context,created_at) VALUES(?,?,?,NOW())'); $st->execute([$level,$message,$context]); }catch(Throwable $e){} } }
