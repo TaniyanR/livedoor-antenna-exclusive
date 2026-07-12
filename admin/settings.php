@@ -46,6 +46,6 @@ foreach(['site_name'=>'サイト名','site_description'=>'サイト説明','rss_
 echo '<h3>管理者情報</h3>';
 echo '<label>管理者ユーザー名<input name=admin_username value="'.e($currentAdmin).'" required></label>';
 echo '<label>管理者パスワード<input type=password name=admin_password placeholder="変更しない場合は空欄"></label>';
-echo '<p>初期ログイン情報は admin / password です。インストール後は必ずここで変更してください。</p>';
+echo '<p>インストール時に設定した管理者情報を変更できます。パスワードは8文字以上を推奨します。</p>';
 echo '<p>ツールRSS配信件数は20件固定です。</p><button>保存</button></form>';
 admin_footer();
