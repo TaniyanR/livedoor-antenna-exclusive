@@ -8,5 +8,50 @@ function atom_entry(string $title,string $body): string { return '<?xml version=
 function livedoor_atompub_headers(string $user,string $pass,string $authMethod): array { $headers=['Content-Type: application/atom+xml;type=entry; charset=utf-8']; if($authMethod==='wsse'){ $nonce=random_bytes(16); $created=gmdate('Y-m-d\TH:i:s\Z'); $digest=base64_encode(sha1($nonce.$created.$pass,true)); $headers[]='Authorization: WSSE profile="UsernameToken"'; $headers[]='X-WSSE: UsernameToken Username="'.$user.'", PasswordDigest="'.$digest.'", Nonce="'.base64_encode($nonce).'", Created="'.$created.'"'; } else $headers[]='Authorization: Basic '.base64_encode($user.':'.$pass); return $headers; }
 function validate_livedoor_atompub_settings(string $url,string $authMethod): void { if(!valid_url($url)) throw new RuntimeException('AtomPub投稿URLが不正です'); if(!preg_match('#^https://livedoor\.blogcms\.jp/atompub/[^/]+/article$#',$url)) throw new RuntimeException('AtomPub投稿URLは https://livedoor.blogcms.jp/atompub/{BLOG_NAME}/article の形式で入力してください'); if($authMethod==='basic'&&parse_url($url,PHP_URL_SCHEME)!=='https') throw new RuntimeException('Basic認証ではHTTPSのAtomPub投稿URLを使用してください'); }
 function post_to_livedoor(string $title,string $body): array { $url=setting('atompub_url',''); $user=setting('livedoor_id',''); $pass=setting('api_password',''); $auth=setting('auth_method','basic')==='wsse'?'wsse':'basic'; if(!$url||!$user||!$pass) throw new RuntimeException('livedoor API設定が未入力です'); validate_livedoor_atompub_settings($url,$auth); $ctx=stream_context_create(['http'=>['method'=>'POST','header'=>implode("\r\n",livedoor_atompub_headers($user,$pass,$auth)),'content'=>atom_entry($title,$body),'timeout'=>20,'ignore_errors'=>true]]); $res=@file_get_contents($url,false,$ctx); $code=0; foreach($http_response_header??[] as $hh) if(preg_match('/HTTP\/\S+\s+(\d+)/',$hh,$m)) $code=(int)$m[1]; if($code<200||$code>=300) throw new RuntimeException('APIエラー HTTP '.$code.' '.substr((string)$res,0,300)); $loc=''; foreach($http_response_header??[] as $hh) if(stripos($hh,'Location:')===0) $loc=trim(substr($hh,9)); return ['url'=>$loc?:$url,'response'=>(string)$res]; }
-function run_post(): int { $items=select_articles((int)setting('post_article_count',36)); if(!$items) throw new RuntimeException('投稿対象記事がありません'); $main=choose_main($items); $title=clean_title($main['title']); $body=body_html($items); try{$r=post_to_livedoor($title,$body); $result='OK';$err=null;$url=$r['url'];}catch(Throwable $e){$pdo=db(); if($pdo->inTransaction()) $pdo->rollBack(); $err=$e->getMessage(); try{$pdo->beginTransaction(); $st=$pdo->prepare('INSERT INTO post_history(posted_at,main_title,livedoor_url,article_count,result,error,image_url,created_at) VALUES(NOW(),?,?,?,?,?,?,NOW())'); $st->execute([$title,'',count($items),'ERROR',$err,$main['image_url']]); $pdo->commit();}catch(Throwable $historyError){ if($pdo->inTransaction()) $pdo->rollBack(); log_event('error','投稿失敗履歴の保存にも失敗',$historyError->getMessage()); } log_event('error','投稿失敗',$err); throw $e;} db()->prepare('INSERT INTO post_history(posted_at,main_title,livedoor_url,article_count,result,error,image_url,created_at) VALUES(NOW(),?,?,?,?,?,?,NOW())')->execute([$title,$url,count($items),$result,$err,$main['image_url']]); $pid=(int)db()->lastInsertId(); foreach($items as $i){ db()->prepare('INSERT INTO post_items(post_id,article_id) VALUES(?,?)')->execute([$pid,$i['id']]); db()->prepare('UPDATE articles SET selected=1,last_post_id=? WHERE id=?')->execute([$pid,$i['id']]); } return $pid; }
+function run_post(): int {
+    $items=select_articles((int)setting('post_article_count',36));
+    if(!$items) throw new RuntimeException('投稿対象記事がありません');
+
+    $main=choose_main($items);
+    $title=clean_title($main['title']);
+    $body=body_html($items);
+    $pdo=db();
+
+    try{
+        $r=post_to_livedoor($title,$body);
+    }catch(Throwable $e){
+        if($pdo->inTransaction()) $pdo->rollBack();
+
+        $err=$e->getMessage();
+
+        try{
+            $pdo->beginTransaction();
+            $st=$pdo->prepare('INSERT INTO post_history(posted_at,main_title,livedoor_url,article_count,result,error,image_url,created_at) VALUES(NOW(),?,?,?,?,?,?,NOW())');
+            $st->execute([$title,'',count($items),'ERROR',$err,$main['image_url']]);
+            $pdo->commit();
+        }catch(Throwable $historyError){
+            if($pdo->inTransaction()) $pdo->rollBack();
+            log_event('error','投稿失敗履歴の保存にも失敗',$historyError->getMessage());
+        }
+
+        log_event('error','投稿失敗',$err);
+        throw $e;
+    }
+
+    try{
+        $pdo->beginTransaction();
+        $st=$pdo->prepare('INSERT INTO post_history(posted_at,main_title,livedoor_url,article_count,result,error,image_url,created_at) VALUES(NOW(),?,?,?,?,?,?,NOW())');
+        $st->execute([$title,$r['url'],count($items),'OK',null,$main['image_url']]);
+        $pid=(int)$pdo->lastInsertId();
+        foreach($items as $i){
+            $pdo->prepare('INSERT INTO post_items(post_id,article_id) VALUES(?,?)')->execute([$pid,$i['id']]);
+            $pdo->prepare('UPDATE articles SET selected=1,last_post_id=? WHERE id=?')->execute([$pid,$i['id']]);
+        }
+        $pdo->commit();
+        return $pid;
+    }catch(Throwable $e){
+        if($pdo->inTransaction()) $pdo->rollBack();
+        throw $e;
+    }
+}
 function cleanup_history(): void { $d=(int)setting('history_retention_days',90); db()->prepare('DELETE FROM post_history WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)')->execute([$d]); }
