@@ -38,14 +38,15 @@ $currentAdmin=(string)($st->fetchColumn()?:'admin');
 admin_header('基本設定');
 if($notice) echo '<p class="notice">'.e($notice).'</p>';
 if($error) echo '<p class="notice error">'.e($error).'</p>';
-echo '<form method=post><input type=hidden name=csrf value='.csrf_token().'>';
-echo '<h3>サイト情報</h3>';
+echo '<form method=post class=settings-form><input type=hidden name=csrf value='.csrf_token().'>';
+echo '<h3>サイト情報</h3><p class=section-lead>公開サイトと自動取得・投稿に関する基本値を設定します。</p><div class=form-grid>';
 foreach(['site_name'=>'サイト名','site_description'=>'サイト説明','rss_fetch_limit'=>'RSS共通取得件数','post_article_count'=>'livedoor投稿件数','post_interval_minutes'=>'投稿間隔(分)','history_retention_days'=>'投稿履歴保持日数'] as $k=>$l){
-    echo '<label>'.e($l).'<input name='.e($k).' value="'.e(setting($k,'')).'"></label>';
+    $cls=in_array($k,['site_name','site_description'],true)?' class=full':'';
+    echo '<label'.$cls.'>'.e($l).'<input name='.e($k).' value="'.e(setting($k,'')).'"></label>';
 }
-echo '<h3>管理者情報</h3>';
+echo '</div><h3>管理者情報</h3><p class=section-lead>管理画面にログインするユーザー情報を変更できます。</p><div class=form-grid>';
 echo '<label>管理者ユーザー名<input name=admin_username value="'.e($currentAdmin).'" required></label>';
-echo '<label>管理者パスワード<input type=password name=admin_password placeholder="変更しない場合は空欄"></label>';
-echo '<p>インストール時に設定した管理者情報を変更できます。パスワードは8文字以上を推奨します。</p>';
-echo '<p>ツールRSS配信件数は20件固定です。</p><button>保存</button></form>';
+echo '<label>管理者パスワード<input type=password name=admin_password placeholder="変更しない場合は空欄"></label></div>';
+echo '<p class=muted>インストール時に設定した管理者情報を変更できます。パスワードは8文字以上を推奨します。</p>';
+echo '<p class=muted>ツールRSS配信件数は20件固定です。</p><div class=actions><button>保存</button></div></form>';
 admin_footer();
