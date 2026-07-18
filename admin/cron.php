@@ -69,26 +69,26 @@ $token=ensure_cron_token();
                 <button name="regen" value="1" class="danger">Webトークン再生成</button>
             </div>
         </section>
+
+        <section class="admin-ui-section">
+            <h3>CLI設定例</h3>
+            <div class="admin-ui-code-row">
+                <strong>CLI RSS取得</strong>
+                <code><?=e($php.' '.APP_ROOT.'/cron/fetch.php')?></code>
+            </div>
+            <div class="admin-ui-code-row">
+                <strong>CLI 投稿</strong>
+                <code><?=e($php.' '.APP_ROOT.'/cron/post.php')?></code>
+            </div>
+        </section>
+
+        <section class="admin-ui-section">
+            <h3>最終実行日時</h3>
+            <dl class="admin-ui-status-list">
+                <div><dt>最終RSS実行</dt><dd><?=e(setting('last_rss_cron','-'))?></dd></div>
+                <div><dt>最終投稿実行</dt><dd><?=e(setting('last_post_cron','-'))?></dd></div>
+            </dl>
+        </section>
     </form>
-
-    <section class="admin-ui-card admin-ui-section">
-        <h3>CLI設定例</h3>
-        <div class="admin-ui-code-row">
-            <strong>CLI RSS取得</strong>
-            <code><?=e($php.' '.APP_ROOT.'/cron/fetch.php')?></code>
-        </div>
-        <div class="admin-ui-code-row">
-            <strong>CLI 投稿</strong>
-            <code><?=e($php.' '.APP_ROOT.'/cron/post.php')?></code>
-        </div>
-    </section>
-
-    <section class="admin-ui-card admin-ui-section">
-        <h3>最終実行日時</h3>
-        <dl class="admin-ui-status-list">
-            <div><dt>最終RSS実行</dt><dd><?=e(setting('last_rss_cron','-'))?></dd></div>
-            <div><dt>最終投稿実行</dt><dd><?=e(setting('last_post_cron','-'))?></dd></div>
-        </dl>
-    </section>
 </div>
 <?php admin_footer();
