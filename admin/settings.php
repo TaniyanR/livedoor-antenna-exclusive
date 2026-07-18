@@ -28,8 +28,8 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
         <section class="admin-ui-section">
             <h3>サイト情報</h3>
             <?php foreach([
-                'site_name'=>'サイト名',
-                'site_description'=>'サイト説明',
+                'site_name'=>'ツール名',
+                'site_description'=>'配信RSSの説明',
                 'rss_fetch_limit'=>'RSS共通取得件数',
                 'post_article_count'=>'livedoor投稿件数',
                 'post_interval_minutes'=>'投稿間隔(分)',
@@ -40,6 +40,8 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                 <input id="setting-<?=e($k)?>" name="<?=e($k)?>" value="<?=e(setting($k,''))?>">
             </div>
             <?php endforeach; ?>
+            <p class="admin-ui-note">「ツール名」は管理画面左上とブラウザのタイトルに表示されます。</p>
+            <p class="admin-ui-note">「配信RSSの説明」は、このツールが出力するRSSの説明文に使われます。</p>
             <p class="admin-ui-note">ツールRSS配信件数は20件固定です。</p>
         </section>
 
