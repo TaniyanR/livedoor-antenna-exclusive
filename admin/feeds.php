@@ -60,21 +60,9 @@ if(isset($_GET['edit'])){
         </div>
     </form>
 
-    <form method="get" class="admin-ui-card admin-ui-search">
-        <div class="admin-ui-field">
-            <label for="feed-search">検索</label>
-            <div class="admin-ui-search-row">
-                <input id="feed-search" name="q" placeholder="検索" value="<?=e($_GET['q']??'')?>">
-                <button>検索</button>
-            </div>
-        </div>
-    </form>
-
 <?php
-$q='%'.($_GET['q']??'').'%';
 $page=max(1,(int)($_GET['page']??1));
-$st=db()->prepare('SELECT * FROM feeds WHERE site_name LIKE ? OR feed_url LIKE ? ORDER BY sort_order,id LIMIT 20 OFFSET '.(($page-1)*20));
-$st->execute([$q,$q]);
+$st=db()->query('SELECT * FROM feeds ORDER BY sort_order,id LIMIT 20 OFFSET '.(($page-1)*20));
 ?>
     <div class="admin-ui-table-wrap">
         <table>
