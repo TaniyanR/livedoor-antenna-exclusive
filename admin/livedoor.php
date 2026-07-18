@@ -36,7 +36,7 @@ if($msg) echo '<p class="notice">'.e($msg).'</p>';
 
         <div class="admin-ui-field">
             <label for="atompub-url">ルートエンドポイント</label>
-            <input id="atompub-url" name="atompub_url" placeholder="https://livedoor.blogcms.jp/atompub/{BLOG_NAME}/article" value="<?=e(setting('atompub_url',''))?>">
+            <input id="atompub-url" name="atompub_url" placeholder="https://livedoor.blogcms.jp/atompub/{BLOG_NAME}" value="<?=e(setting('atompub_url',''))?>">
         </div>
 
         <div class="admin-ui-field">
