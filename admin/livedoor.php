@@ -4,9 +4,10 @@ require_once __DIR__.'/../app/poster.php';
 $msg='';
 if($_SERVER['REQUEST_METHOD']==='POST'){
     verify_csrf();
-    foreach(['blog_id','atompub_url','livedoor_id','api_password','auth_method'] as $k){
+    foreach(['blog_id','livedoor_id','atompub_url','api_password'] as $k){
         if(isset($_POST[$k])&&$_POST[$k]!=='********') set_setting($k,(string)$_POST[$k]);
     }
+    set_setting('auth_method','basic');
     if(isset($_POST['test'])){
         try{
             $msg=livedoor_connection_test();
@@ -24,31 +25,23 @@ if($msg) echo '<p class="notice">'.e($msg).'</p>';
         <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
 
         <div class="admin-ui-field">
-            <label for="blog-id">ブログID</label>
+            <label for="blog-id">ブログID（BLOG_NAME）</label>
             <input id="blog-id" name="blog_id" value="<?=e(setting('blog_id',''))?>">
         </div>
 
         <div class="admin-ui-field">
-            <label for="atompub-url">AtomPub投稿URL</label>
-            <input id="atompub-url" name="atompub_url" placeholder="https://livedoor.blogcms.jp/atompub/{BLOG_NAME}/article" value="<?=e(setting('atompub_url',''))?>">
-        </div>
-
-        <div class="admin-ui-field">
-            <label for="livedoor-id">livedoor ID</label>
+            <label for="livedoor-id">livedoor ID（ログイン用）</label>
             <input id="livedoor-id" name="livedoor_id" value="<?=e(setting('livedoor_id',''))?>">
         </div>
 
         <div class="admin-ui-field">
-            <label for="api-password">AtomPub用パスワード / APIキー</label>
-            <input id="api-password" type="password" name="api_password" value="********">
+            <label for="atompub-url">ルートエンドポイント</label>
+            <input id="atompub-url" name="atompub_url" placeholder="https://livedoor.blogcms.jp/atompub/{BLOG_NAME}/article" value="<?=e(setting('atompub_url',''))?>">
         </div>
 
         <div class="admin-ui-field">
-            <label for="auth-method">認証方式</label>
-            <select id="auth-method" name="auth_method">
-                <option value="basic">Basic</option>
-                <option value="wsse" <?=setting('auth_method')==='wsse'?'selected':''?>>WSSE</option>
-            </select>
+            <label for="api-password">AtomPub用パスワード</label>
+            <input id="api-password" type="password" name="api_password" value="********">
         </div>
 
         <div class="admin-ui-actions">
