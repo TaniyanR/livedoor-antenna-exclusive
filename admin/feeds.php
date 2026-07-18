@@ -2,8 +2,21 @@
 require_once __DIR__.'/../app/rss.php';
 
 $msg='';
+$form=[
+    'id'=>'',
+    'site_name'=>'',
+    'site_url'=>'',
+    'feed_url'=>'',
+];
+
 if($_SERVER['REQUEST_METHOD']==='POST'){
     verify_csrf();
+    $form=[
+        'id'=>(string)($_POST['id']??''),
+        'site_name'=>trim((string)($_POST['site_name']??'')),
+        'site_url'=>trim((string)($_POST['site_url']??'')),
+        'feed_url'=>trim((string)($_POST['feed_url']??'')),
+    ];
     try{
         if(isset($_POST['delete'])){
             db()->prepare('DELETE FROM feeds WHERE id=?')->execute([$_POST['delete']]);
@@ -11,14 +24,22 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
             foreach(explode(',',$_POST['order']) as $i=>$id){
                 db()->prepare('UPDATE feeds SET sort_order=? WHERE id=?')->execute([$i,(int)$id]);
             }
-        }else{
-            $p=test_feed($_POST['feed_url']);
-            if(isset($_POST['id'])&&$_POST['id']){
-                db()->prepare('UPDATE feeds SET site_name=?,feed_url=?,memo=?,feed_type=?,updated_at=NOW() WHERE id=?')->execute([$_POST['site_name'],$_POST['feed_url'],$_POST['memo'],$p['type'],$_POST['id']]);
-            }else{
-                db()->prepare('INSERT INTO feeds(site_name,feed_url,memo,sort_order,feed_type,created_at,updated_at) VALUES(?,?,?,?,?,NOW(),NOW())')->execute([$_POST['site_name'],$_POST['feed_url'],$_POST['memo'],(int)db()->query('SELECT COALESCE(MAX(sort_order),0)+1 FROM feeds')->fetchColumn(),$p['type']]);
-            }
+        }elseif(isset($_POST['test'])){
+            $p=test_feed($form['feed_url']);
             $msg='テスト成功: '.$p['type'].' / '.count($p['items']).'件 / 画像'.($p['has_images']?'あり':'なし').' / '.implode('、',array_map(fn($i)=>$i['title'],array_slice($p['items'],0,3)));
+        }elseif(isset($_POST['save'])){
+            if($form['site_name']==='') throw new RuntimeException('サイト名を入力してください。');
+            if(!valid_url($form['site_url'])) throw new RuntimeException('URLを正しく入力してください。');
+            if(!valid_url($form['feed_url'])) throw new RuntimeException('RSSを正しく入力してください。');
+
+            if($form['id']!==''){
+                db()->prepare('UPDATE feeds SET site_name=?,site_url=?,feed_url=?,updated_at=NOW() WHERE id=?')->execute([$form['site_name'],$form['site_url'],$form['feed_url'],(int)$form['id']]);
+                $msg='更新しました。';
+            }else{
+                db()->prepare('INSERT INTO feeds(site_name,site_url,feed_url,memo,sort_order,feed_type,created_at,updated_at) VALUES(?,?,?,?,?,NULL,NOW(),NOW())')->execute([$form['site_name'],$form['site_url'],$form['feed_url'],'',(int)db()->query('SELECT COALESCE(MAX(sort_order),0)+1 FROM feeds')->fetchColumn()]);
+                $msg='登録しました。';
+                $form=['id'=>'','site_name'=>'','site_url'=>'','feed_url'=>''];
+            }
         }
     }catch(Throwable $e){
         $msg='エラー: '.$e->getMessage();
@@ -28,36 +49,45 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
 admin_header('RSS管理');
 if($msg) echo '<p class="notice">'.e($msg).'</p>';
 
-$edit=null;
-if(isset($_GET['edit'])){
+if($_SERVER['REQUEST_METHOD']!=='POST' && isset($_GET['edit'])){
     $es=db()->prepare('SELECT * FROM feeds WHERE id=?');
     $es->execute([$_GET['edit']]);
     $edit=$es->fetch();
+    if($edit){
+        $form=[
+            'id'=>(string)$edit['id'],
+            'site_name'=>(string)$edit['site_name'],
+            'site_url'=>(string)($edit['site_url']??''),
+            'feed_url'=>(string)$edit['feed_url'],
+        ];
+    }
 }
 ?>
 <div class="feeds-page admin-ui-page">
     <form method="post" class="admin-ui-card">
         <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
-        <input type="hidden" name="id" value="<?=e($edit['id']??'')?>">
+        <input type="hidden" name="id" value="<?=e($form['id'])?>">
 
         <div class="admin-ui-field">
             <label for="feed-site-name">サイト名</label>
-            <input id="feed-site-name" name="site_name" placeholder="サイト名" value="<?=e($edit['site_name']??'')?>" required>
+            <input id="feed-site-name" name="site_name" placeholder="サイト名" value="<?=e($form['site_name'])?>" required>
         </div>
 
         <div class="admin-ui-field">
-            <label for="feed-url">RSS URL</label>
-            <input id="feed-url" name="feed_url" placeholder="RSS URL" value="<?=e($edit['feed_url']??'')?>" required>
+            <label for="site-url">URL</label>
+            <input id="site-url" name="site_url" type="url" placeholder="https://example.com/" value="<?=e($form['site_url'])?>" required>
         </div>
 
         <div class="admin-ui-field">
-            <label for="feed-memo">メモ</label>
-            <textarea id="feed-memo" name="memo" placeholder="メモ"><?=e($edit['memo']??'')?></textarea>
+            <label for="feed-url">RSS</label>
+            <input id="feed-url" name="feed_url" type="url" placeholder="https://example.com/feed/" value="<?=e($form['feed_url'])?>" required>
         </div>
 
         <div class="admin-ui-actions">
-            <button><?= $edit?'更新・テスト取得':'登録・テスト取得' ?></button>
+            <button name="save" value="1"><?= $form['id']!==''?'更新':'登録' ?></button>
+            <button name="test" value="1" type="submit">テスト取得</button>
         </div>
+        <p class="admin-ui-note">「テスト取得」はRSSを確認するだけで、登録・更新は行いません。</p>
     </form>
 
 <?php
@@ -66,13 +96,15 @@ $st=db()->query('SELECT * FROM feeds ORDER BY sort_order,id LIMIT 20 OFFSET '.((
 ?>
     <div class="admin-ui-table-wrap">
         <table>
-            <tr><th>順</th><th>サイト名</th><th>RSS URL</th><th>メモ</th><th>最終取得</th><th>結果</th><th>エラー</th><th>操作</th></tr>
+            <tr><th>順</th><th>サイト名</th><th>URL・RSS</th><th>最終取得</th><th>結果</th><th>エラー</th><th>操作</th></tr>
             <?php foreach($st as $r): ?>
             <tr draggable="true" data-id="<?=e($r['id'])?>">
                 <td><?=e($r['sort_order'])?></td>
                 <td><?=e($r['site_name'])?></td>
-                <td class="admin-ui-url-cell"><?=e($r['feed_url'])?></td>
-                <td><?=e($r['memo'])?></td>
+                <td class="admin-ui-url-cell">
+                    <div class="admin-ui-url-pair"><strong>URL</strong><span><?=e($r['site_url']??'')?></span></div>
+                    <div class="admin-ui-url-pair"><strong>RSS</strong><span><?=e($r['feed_url'])?></span></div>
+                </td>
                 <td><?=e($r['last_fetched_at'])?></td>
                 <td><?=e($r['last_result'])?></td>
                 <td><?=e($r['last_error'])?></td>

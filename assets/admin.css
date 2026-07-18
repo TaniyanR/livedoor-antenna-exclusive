@@ -17,7 +17,11 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif
 .admin-ui-page .admin-ui-table-wrap{overflow-x:auto;background:#fff;border:1px solid #dcdcde;border-radius:6px;margin:14px 0}
 .admin-ui-page .admin-ui-table-wrap table{min-width:900px;margin:0;padding:0;border:0;border-radius:0;background:#fff}
 .admin-ui-page .admin-ui-table-wrap th,.admin-ui-page .admin-ui-table-wrap td{padding:10px 9px;vertical-align:middle}
-.admin-ui-page .admin-ui-url-cell{min-width:260px;word-break:break-all}
+.admin-ui-page .admin-ui-url-cell{min-width:300px;word-break:break-all}
+.admin-ui-page .admin-ui-url-pair{display:grid;grid-template-columns:44px minmax(0,1fr);gap:8px;align-items:start}
+.admin-ui-page .admin-ui-url-pair+.admin-ui-url-pair{margin-top:8px;padding-top:8px;border-top:1px solid #eee}
+.admin-ui-page .admin-ui-url-pair strong{white-space:nowrap}
+.admin-ui-page .admin-ui-url-pair span:empty::before{content:'未登録';color:#8c8f94}
 .admin-ui-page .admin-ui-row-actions{display:flex;gap:8px;align-items:center;white-space:nowrap}
 .admin-ui-page .admin-ui-inline-form,.admin-ui-page .admin-ui-hidden-form{display:inline;margin:0;padding:0;border:0;background:transparent;border-radius:0}
 .admin-ui-page .admin-ui-hidden-form{display:none}
