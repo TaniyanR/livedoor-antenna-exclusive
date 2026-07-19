@@ -7,10 +7,16 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     verify_csrf();
     try{
         if(isset($_POST['regen'])) set_setting('cron_token',bin2hex(random_bytes(32)));
-        if(isset($_POST['interval'])) set_setting('cron_interval_minutes',(string)max(1,(int)$_POST['interval']));
+        if(isset($_POST['interval'])){
+            $interval=(int)$_POST['interval'];
+            if(!in_array($interval,[10,30,60],true)) $interval=60;
+            set_setting('post_interval_minutes',(string)$interval);
+            set_setting('cron_interval_minutes',(string)$interval);
+            $msg='投稿間隔を'.$interval.'分に設定しました。';
+        }
         if(isset($_POST['rss'])){
-            $r=fetch_all_feeds();
-            $msg='RSS取得完了: 成功 '.$r['ok'].'件 / 失敗 '.$r['ng'].'件（'.date('Y-m-d H:i:s').'）';
+            $result=fetch_all_feeds();
+            $msg='RSS取得完了: 成功 '.$result['ok'].'件 / 失敗 '.$result['ng'].'件（'.date('Y-m-d H:i:s').'）';
             set_setting('last_rss_cron',date('Y-m-d H:i:s'));
         }
         if(isset($_POST['post'])){
@@ -26,6 +32,9 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     }
 }
 
+$interval=(int)setting('post_interval_minutes',60);
+if(!in_array($interval,[10,30,60],true)) $interval=60;
+
 admin_header('Cron設定');
 if($msg) echo '<p class="'.e($class).'">'.e($msg).'</p>';
 $php=PHP_BINARY?:'php';
@@ -36,11 +45,16 @@ $token=ensure_cron_token();
         <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
 
         <section class="admin-ui-section">
-            <h3>実行間隔設定</h3>
+            <h3>投稿間隔設定</h3>
             <div class="admin-ui-field">
-                <label for="cron-interval">実行間隔(分)</label>
-                <input id="cron-interval" name="interval" value="<?=e(setting('cron_interval_minutes',60))?>">
+                <label for="cron-interval">投稿間隔（分）</label>
+                <select id="cron-interval" name="interval">
+                    <?php foreach([10,30,60] as $minutes): ?>
+                        <option value="<?=$minutes?>" <?=$interval===$minutes?'selected':''?>><?=$minutes?>分</option>
+                    <?php endforeach; ?>
+                </select>
             </div>
+            <p class="admin-ui-note">外部Cronは10分ごとに実行しても、ここで選んだ間隔になるまで自動投稿を待機します。</p>
             <div class="admin-ui-actions">
                 <button>保存</button>
             </div>
@@ -52,6 +66,7 @@ $token=ensure_cron_token();
                 <button name="rss" value="1">RSS取得実行</button>
                 <button name="post" value="1">livedoor投稿実行</button>
             </div>
+            <p class="admin-ui-note">手動のlivedoor投稿実行は、設定した投稿間隔を待たずに実行します。</p>
         </section>
 
         <section class="admin-ui-section">
