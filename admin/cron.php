@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__.'/../app/poster.php';
 
+if(!installed() || !database_available()){
+    redirect('/install/');
+}
+
 $msg='';
 $class='notice';
 if($_SERVER['REQUEST_METHOD']==='POST'){
