@@ -1,12 +1,12 @@
 <?php
-require_once __DIR__.'/../app/bootstrap.php';
+require_once __DIR__.'/../app/poster.php';
 
 if(!installed() || !database_available()){
     redirect('/install/');
 }
 require_admin();
 
-$notice='';
+$notice=($_GET['deleted']??'')==='item'?'記事を公開ページから削除しました。':(($_GET['deleted']??'')==='page'?'公開ページと投稿履歴を削除しました。':'');
 $error='';
 
 if($_SERVER['REQUEST_METHOD']==='POST'){
@@ -14,26 +14,54 @@ if($_SERVER['REQUEST_METHOD']==='POST'){
     $pdo=db();
     $pdo->beginTransaction();
     try{
-        if(isset($_POST['delete_articles']) && !empty($_POST['article_ids'])){
+        if(isset($_POST['delete_post_item'])){
+            $postId=max(0,(int)($_POST['post_id']??0));
+            $articleId=max(0,(int)($_POST['article_id']??0));
+            $statement=$pdo->prepare('SELECT * FROM post_history WHERE id=? FOR UPDATE');
+            $statement->execute([$postId]);
+            $post=$statement->fetch();
+            if(!$post || $post['result']!=='OK' || empty($post['livedoor_url'])) throw new RuntimeException('削除対象の公開ページが見つかりません');
+            $statement=$pdo->prepare('SELECT COUNT(*) FROM post_items WHERE post_id=? AND article_id=?');
+            $statement->execute([$postId,$articleId]);
+            if(!(int)$statement->fetchColumn()) throw new RuntimeException('削除対象の記事が見つかりません');
+            $statement=$pdo->prepare('SELECT COUNT(*) FROM post_items WHERE post_id=?');
+            $statement->execute([$postId]);
+            if((int)$statement->fetchColumn()<=1) throw new RuntimeException('最後の1件は個別に削除できません。「ページを削除」を使用してください。');
+            $statement=$pdo->prepare('SELECT a.*,f.site_name FROM post_items pi JOIN articles a ON a.id=pi.article_id JOIN feeds f ON f.id=a.feed_id WHERE pi.post_id=? AND a.id<>? ORDER BY a.id ASC');
+            $statement->execute([$postId,$articleId]);
+            $remainingItems=$statement->fetchAll();
+            update_livedoor_article((string)$post['livedoor_url'],(string)$post['main_title'],$remainingItems);
+            $pdo->prepare('DELETE FROM post_items WHERE post_id=? AND article_id=?')->execute([$postId,$articleId]);
+            $replacementImage='';
+            foreach($remainingItems as $remainingItem){ if(!empty($remainingItem['image_url'])){ $replacementImage=(string)$remainingItem['image_url']; break; } }
+            $pdo->prepare('UPDATE post_history SET article_count=?,image_url=? WHERE id=?')->execute([count($remainingItems),$replacementImage,$postId]);
+            $pdo->commit();
+            log_event('info','公開ページから記事を削除','post_id='.$postId.' article_id='.$articleId);
+            redirect('/admin/posts.php?post_id='.$postId.'&deleted=item');
+        }elseif(isset($_POST['delete_post_page'])){
+            $postId=max(0,(int)($_POST['post_id']??0));
+            $statement=$pdo->prepare('SELECT * FROM post_history WHERE id=? FOR UPDATE');
+            $statement->execute([$postId]);
+            $post=$statement->fetch();
+            if(!$post) throw new RuntimeException('削除対象の投稿履歴が見つかりません');
+            if($post['result']==='OK' && !empty($post['livedoor_url'])) delete_livedoor_article((string)$post['livedoor_url']);
+            $pdo->prepare('DELETE FROM post_items WHERE post_id=?')->execute([$postId]);
+            $pdo->prepare('DELETE FROM post_history WHERE id=?')->execute([$postId]);
+            $pdo->commit();
+            log_event('info','livedoor公開ページを削除','post_id='.$postId);
+            redirect('/admin/posts.php?deleted=page');
+        }elseif(isset($_POST['delete_articles']) && !empty($_POST['article_ids'])){
             $ids=array_values(array_filter(array_map('intval',(array)$_POST['article_ids'])));
             foreach($ids as $id){
                 $pdo->prepare('DELETE FROM post_items WHERE article_id=?')->execute([$id]);
                 $pdo->prepare('DELETE FROM articles WHERE id=? AND last_post_id IS NULL')->execute([$id]);
             }
             $notice=count($ids).'件の未投稿記事を削除しました。';
-        }elseif(isset($_POST['delete_history']) && !empty($_POST['history_ids'])){
-            $ids=array_values(array_filter(array_map('intval',(array)$_POST['history_ids'])));
-            if($ids){
-                $in=implode(',',array_fill(0,count($ids),'?'));
-                $pdo->prepare("DELETE FROM post_items WHERE post_id IN ($in)")->execute($ids);
-                $pdo->prepare("DELETE FROM post_history WHERE id IN ($in)")->execute($ids);
-            }
-            $notice=count($ids).'件の投稿履歴を削除しました。';
         }
-        $pdo->commit();
+        if($pdo->inTransaction()) $pdo->commit();
     }catch(Throwable $e){
         if($pdo->inTransaction()) $pdo->rollBack();
-        $error='削除処理に失敗しました。';
+        $error='削除処理に失敗しました。'.$e->getMessage();
         log_event('error','投稿管理削除失敗',$e->getMessage());
     }
 }
@@ -72,9 +100,16 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                     <a class="post-management-back" href="<?=e(app_url('/admin/posts.php'))?>">&larr; 投稿一覧へ戻る</a>
                     <h3><?=e($selectedPost['main_title'])?></h3>
                 </div>
-                <?php if($selectedPost['livedoor_url']): ?>
-                    <a class="button post-management-open" href="<?=e(livedoor_public_article_url($selectedPost['livedoor_url']))?>" target="_blank" rel="noopener noreferrer">公開ページ <span aria-hidden="true">↗</span></a>
-                <?php endif; ?>
+                <div class="post-management-heading-actions">
+                    <?php if($selectedPost['livedoor_url']): ?>
+                        <a class="button post-management-open" href="<?=e(livedoor_public_article_url($selectedPost['livedoor_url']))?>" target="_blank" rel="noopener noreferrer">公開ページ <span aria-hidden="true">↗</span></a>
+                    <?php endif; ?>
+                    <form method="post" class="admin-ui-inline-form" onsubmit="return confirm('このlivedoor公開ページを削除します。掲載記事と管理画面の投稿履歴も削除され、元に戻せません。実行しますか？');">
+                        <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
+                        <input type="hidden" name="post_id" value="<?=e($selectedPost['id'])?>">
+                        <button class="post-delete-page" name="delete_post_page" value="1">ページを削除</button>
+                    </form>
+                </div>
             </div>
 
             <dl class="post-detail-summary">
@@ -89,19 +124,27 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
             <?php else: ?>
                 <div class="post-item-grid">
                     <?php foreach($selectedItems as $item): ?>
-                        <a class="post-item-card" href="<?=e($item['url'])?>" target="_blank" rel="noopener noreferrer">
-                            <span class="post-item-image">
-                                <?php if($item['image_url']): ?>
-                                    <img src="<?=e($item['image_url'])?>" alt="" loading="lazy">
-                                <?php else: ?>
-                                    <span>画像なし</span>
-                                <?php endif; ?>
-                            </span>
-                            <span class="post-item-body">
-                                <span class="post-item-site"><?=e($item['site_name'])?></span>
-                                <strong><?=e($item['title'])?></strong>
-                            </span>
-                        </a>
+                        <article class="post-item-card">
+                            <a class="post-item-link" href="<?=e($item['url'])?>" target="_blank" rel="noopener noreferrer">
+                                <span class="post-item-image">
+                                    <?php if($item['image_url']): ?>
+                                        <img src="<?=e($item['image_url'])?>" alt="" loading="lazy">
+                                    <?php else: ?>
+                                        <span>画像なし</span>
+                                    <?php endif; ?>
+                                </span>
+                                <span class="post-item-body">
+                                    <span class="post-item-site"><?=e($item['site_name'])?></span>
+                                    <strong><?=e($item['title'])?></strong>
+                                </span>
+                            </a>
+                            <form method="post" class="post-item-delete-form" onsubmit="return confirm('この記事をlivedoor公開ページから削除します。元に戻せません。実行しますか？');">
+                                <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
+                                <input type="hidden" name="post_id" value="<?=e($selectedPost['id'])?>">
+                                <input type="hidden" name="article_id" value="<?=e($item['id'])?>">
+                                <button name="delete_post_item" value="1" <?=count($selectedItems)<=1?'disabled title="最後の1件はページ削除を使用してください"':''?>>記事を削除</button>
+                            </form>
+                        </article>
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
@@ -114,13 +157,10 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
             <?php if(!$history): ?>
                 <p class="muted">投稿履歴はありません。</p>
             <?php else: ?>
-                <form method="post" class="admin-ui-plain-form">
-                    <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
-                    <div class="admin-ui-table-wrap">
+                <div class="admin-ui-table-wrap">
                         <table class="post-management-table post-history-table">
                             <thead>
                                 <tr>
-                                    <th class="post-management-check"></th>
                                     <th>投稿日時</th>
                                     <th>メイン記事</th>
                                     <th>掲載件数</th>
@@ -131,7 +171,6 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                             <tbody>
                             <?php foreach($history as $post): ?>
                                 <tr>
-                                    <td><input type="checkbox" name="history_ids[]" value="<?=e($post['id'])?>" aria-label="削除対象にする"></td>
                                     <td class="post-management-date"><?=e($post['posted_at'])?></td>
                                     <td class="post-management-main-title">
                                         <?php if($post['result']==='OK'): ?>
@@ -155,11 +194,7 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                             <?php endforeach; ?>
                             </tbody>
                         </table>
-                    </div>
-                    <div class="admin-ui-actions">
-                        <button class="danger" name="delete_history" value="1">選択した投稿履歴を削除</button>
-                    </div>
-                </form>
+                </div>
             <?php endif; ?>
         </section>
 
