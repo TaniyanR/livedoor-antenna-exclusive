@@ -50,5 +50,34 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif
 .post-management-page .post-management-table a{color:#2271b1;word-break:break-all}
 .post-management-page .post-management-check{width:34px}
 .post-management-page input[type=checkbox]{width:auto;max-width:none;margin:0}
+.post-management-page .post-management-heading{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:20px}
+.post-management-page .post-management-heading h3{margin:8px 0 0;font-size:22px;line-height:1.5}
+.post-management-page .post-management-back{display:inline-block;color:#2271b1;text-decoration:none}
+.post-management-page .post-management-open{display:inline-block;white-space:nowrap;color:#fff!important;word-break:normal!important}
+.post-management-page .post-management-date{white-space:nowrap}
+.post-management-page .post-management-main-title{min-width:300px}
+.post-management-page .post-management-main-title>a,.post-management-page .post-management-main-title>span{display:block;font-weight:700;line-height:1.55}
+.post-management-page .post-management-main-title small{display:block;margin-top:4px;color:#646970;font-size:12px}
+.post-management-page .post-management-main-title .post-management-error{color:#b32d2e}
+.post-management-page .post-result{display:inline-block;min-width:58px;padding:3px 8px;border-radius:999px;background:#f0f0f1;color:#50575e;font-size:12px;font-weight:700;text-align:center}
+.post-management-page .post-result-ok{background:#edfaef;color:#116329}
+.post-management-page .post-result-error{background:#ffecec;color:#8a2424}
+.post-management-page .post-detail-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:0 0 24px}
+.post-management-page .post-detail-summary div{padding:12px 14px;background:#f6f7f7;border:1px solid #dcdcde;border-radius:6px}
+.post-management-page .post-detail-summary dt{color:#646970;font-size:12px;font-weight:600}
+.post-management-page .post-detail-summary dd{margin:4px 0 0;font-weight:700}
+.post-management-page .post-detail-card h4{margin:0 0 14px;font-size:17px}
+.post-management-page .post-item-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.post-management-page .post-item-card{display:flex;min-width:0;overflow:hidden;flex-direction:column;background:#fff;color:#1d2327!important;text-decoration:none;border:1px solid #dcdcde;border-radius:8px;box-shadow:0 2px 7px rgba(0,0,0,.06);word-break:normal!important}
+.post-management-page .post-item-card:hover{border-color:#2271b1;box-shadow:0 4px 12px rgba(34,113,177,.14)}
+.post-management-page .post-item-image{display:flex;width:100%;height:130px;align-items:center;justify-content:center;overflow:hidden;background:#f0f0f1;color:#646970;font-size:12px;font-weight:700}
+.post-management-page .post-item-image img{display:block;width:100%;height:100%;object-fit:contain;background:#f0f0f1}
+.post-management-page .post-item-body{display:block;padding:11px 12px 13px}
+.post-management-page .post-item-site{display:block;margin-bottom:5px;color:#2271b1;font-size:12px}
+.post-management-page .post-item-body strong{display:block;overflow-wrap:anywhere;line-height:1.55}
 
-@media(max-width:760px){.admin-ui-page .admin-ui-search-row{display:block}.admin-ui-page .admin-ui-search-row button{margin-top:8px}.admin-ui-page .admin-ui-actions{align-items:stretch}.admin-ui-page .admin-ui-code-row,.admin-ui-page .admin-ui-status-list div{grid-template-columns:1fr}.admin-ui-page .admin-ui-code-row code{white-space:normal;word-break:break-all}.settings-page .admin-ui-field,.account-page .admin-ui-field,.livedoor-page .admin-ui-field,.cron-page .admin-ui-field{grid-template-columns:1fr;gap:6px}.settings-page .admin-ui-actions,.account-page .admin-ui-actions,.livedoor-page .admin-ui-actions,.cron-page .admin-ui-section>.admin-ui-actions,.settings-page .admin-ui-note,.account-page .admin-ui-note{margin-left:0}.settings-page .admin-ui-field input,.settings-page .admin-ui-field textarea,.settings-page .admin-ui-field select,.account-page .admin-ui-field input,.account-page .admin-ui-field textarea,.account-page .admin-ui-field select,.livedoor-page .admin-ui-field input,.livedoor-page .admin-ui-field textarea,.livedoor-page .admin-ui-field select,.cron-page .admin-ui-field input,.cron-page .admin-ui-field textarea,.cron-page .admin-ui-field select{max-width:none}}
+@media(max-width:1100px){.post-management-page .post-item-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+@media(max-width:760px){.admin-ui-page .admin-ui-search-row{display:block}.admin-ui-page .admin-ui-search-row button{margin-top:8px}.admin-ui-page .admin-ui-actions{align-items:stretch}.admin-ui-page .admin-ui-code-row,.admin-ui-page .admin-ui-status-list div{grid-template-columns:1fr}.admin-ui-page .admin-ui-code-row code{white-space:normal;word-break:break-all}.settings-page .admin-ui-field,.account-page .admin-ui-field,.livedoor-page .admin-ui-field,.cron-page .admin-ui-field{grid-template-columns:1fr;gap:6px}.settings-page .admin-ui-actions,.account-page .admin-ui-actions,.livedoor-page .admin-ui-actions,.cron-page .admin-ui-section>.admin-ui-actions,.settings-page .admin-ui-note,.account-page .admin-ui-note{margin-left:0}.settings-page .admin-ui-field input,.settings-page .admin-ui-field textarea,.settings-page .admin-ui-field select,.account-page .admin-ui-field input,.account-page .admin-ui-field textarea,.account-page .admin-ui-field select,.livedoor-page .admin-ui-field input,.livedoor-page .admin-ui-field textarea,.livedoor-page .admin-ui-field select,.cron-page .admin-ui-field input,.cron-page .admin-ui-field textarea,.cron-page .admin-ui-field select{max-width:none}.post-management-page .post-management-heading{display:block}.post-management-page .post-management-open{margin-top:12px}.post-management-page .post-detail-summary{grid-template-columns:1fr}.post-management-page .post-item-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+@media(max-width:480px){.post-management-page .post-item-grid{grid-template-columns:1fr}.post-management-page .post-item-image{height:170px}}
