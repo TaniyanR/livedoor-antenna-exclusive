@@ -73,7 +73,7 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                     <h3><?=e($selectedPost['main_title'])?></h3>
                 </div>
                 <?php if($selectedPost['livedoor_url']): ?>
-                    <a class="button post-management-open" href="<?=e($selectedPost['livedoor_url'])?>" target="_blank" rel="noopener noreferrer">livedoorで開く</a>
+                    <a class="button post-management-open" href="<?=e(livedoor_public_article_url($selectedPost['livedoor_url']))?>" target="_blank" rel="noopener noreferrer">公開ページ <span aria-hidden="true">↗</span></a>
                 <?php endif; ?>
             </div>
 
@@ -146,7 +146,7 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                                     <td><span class="post-result post-result-<?=strtolower(e($post['result']))?>"><?=e($post['result'])?></span></td>
                                     <td>
                                         <?php if($post['livedoor_url']): ?>
-                                            <a class="button post-management-open" href="<?=e($post['livedoor_url'])?>" target="_blank" rel="noopener noreferrer">livedoorで開く</a>
+                                            <a class="button post-management-open" href="<?=e(livedoor_public_article_url($post['livedoor_url']))?>" target="_blank" rel="noopener noreferrer">公開ページ <span aria-hidden="true">↗</span></a>
                                         <?php else: ?>
                                             -
                                         <?php endif; ?>
