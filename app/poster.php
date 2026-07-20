@@ -84,7 +84,7 @@ function choose_main(array $items): array {
 
 function safe_link(string $url): string { return valid_url($url)?$url:''; }
 
-function body_html(array $items): string {
+function body_html(array $items, int $mainArticleId=0, string $uploadedMainImage=''): string {
     $style='<style>'
         .'.la-antenna-grid{box-sizing:border-box;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;width:100%;max-width:1500px;margin:0 auto;padding:12px 6px}'
         .'.la-antenna-card{box-sizing:border-box;display:flex!important;min-width:0;flex-direction:column;overflow:hidden;border:1px solid #ddd;border-radius:10px;background:#fff!important;color:#111!important;text-decoration:none!important;box-shadow:0 2px 8px rgba(0,0,0,.12)}'
@@ -109,6 +109,7 @@ function body_html(array $items): string {
         $title=trim((string)$item['title']);
         $site=trim((string)($item['site_name']??''));
         $image=safe_link((string)($item['image_url']??''));
+        if((int)$item['id']===$mainArticleId && $uploadedMainImage!=='') $image=$uploadedMainImage;
         $html.='<a class="la-antenna-card" href="'.e($url).'" target="_blank" rel="noopener noreferrer">';
         if($image!==''){
             $html.='<span class="la-antenna-image"><img src="'.e($image).'" alt="'.e($title).'" loading="lazy"></span>';
@@ -124,6 +125,30 @@ function body_html(array $items): string {
 
 function atom_entry(string $title,string $body): string { return '<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>'.e($title).'</title><content type="html">'.e($body).'</content><updated>'.date('c').'</updated></entry>'; }
 function livedoor_atompub_headers(string $user,string $pass,string $contentType='application/atom+xml;type=entry; charset=utf-8'): array { return ['Content-Type: '.$contentType,'Authorization: Basic '.base64_encode($user.':'.$pass),'Expect:']; }
+function upload_image_to_livedoor(string $sourceUrl): string {
+    $sourceUrl=safe_link($sourceUrl);
+    if($sourceUrl==='') return '';
+
+    $download=http_request('GET',$sourceUrl,['Accept: image/jpeg,image/png,image/gif'],null,['timeout'=>20,'max_bytes'=>5242880]);
+    if($download['status']<200 || $download['status']>=300) throw new RuntimeException('代表画像を取得できませんでした。HTTP '.$download['status']);
+    $imageData=(string)$download['body'];
+    $imageInfo=@getimagesizefromstring($imageData);
+    $mime=is_array($imageInfo)?(string)($imageInfo['mime']??''):'';
+    if(!in_array($mime,['image/jpeg','image/png','image/gif'],true)) throw new RuntimeException('代表画像の形式がJPEG・PNG・GIFではありません');
+
+    $root=validate_livedoor_atompub_settings((string)setting('atompub_url',''));
+    $user=(string)setting('livedoor_id','');
+    $pass=(string)setting('api_password','');
+    if($user==='' || $pass==='') throw new RuntimeException('livedoor API設定が未入力です');
+    $response=http_request('POST',$root.'/image',livedoor_atompub_headers($user,$pass,$mime),$imageData,['timeout'=>30,'max_bytes'=>5242880]);
+    if($response['status']<200 || $response['status']>=300) throw new RuntimeException('代表画像のアップロードに失敗しました。HTTP '.$response['status']);
+
+    $uploadedUrl='';
+    if(preg_match('/<content\\b[^>]*\\bsrc=["\x27]([^"\x27]+)["\x27]/i',(string)$response['body'],$matches)) $uploadedUrl=html_entity_decode($matches[1],ENT_QUOTES|ENT_HTML5,'UTF-8');
+    if($uploadedUrl==='' && preg_match('/<link\\b[^>]*\\brel=["\x27]alternate["\x27][^>]*\\bhref=["\x27]([^"\x27]+)["\x27]/i',(string)$response['body'],$matches)) $uploadedUrl=html_entity_decode($matches[1],ENT_QUOTES|ENT_HTML5,'UTF-8');
+    if(!valid_url($uploadedUrl)) throw new RuntimeException('アップロード後の代表画像URLを取得できませんでした');
+    return $uploadedUrl;
+}
 function validate_livedoor_atompub_settings(string $url): string { $url=rtrim(trim($url),'/'); if(!valid_url($url)) throw new RuntimeException('ルートエンドポイントが正しくありません'); if(!preg_match('#^https://livedoor\.blogcms\.jp/atompub/[^/]+$#',$url)) throw new RuntimeException('ルートエンドポイントは https://livedoor.blogcms.jp/atompub/{BLOG_NAME} の形式で入力してください'); if(parse_url($url,PHP_URL_SCHEME)!=='https') throw new RuntimeException('HTTPSのルートエンドポイントを使用してください'); return $url; }
 function livedoor_connection_test(): string { $url=validate_livedoor_atompub_settings((string)setting('atompub_url','')); $user=setting('livedoor_id',''); $pass=setting('api_password',''); if($user==='') throw new RuntimeException('livedoor ID（ログイン用）が入力されていません'); if($pass==='') throw new RuntimeException('AtomPub用パスワードが入力されていません'); $response=http_request('GET',$url,livedoor_atompub_headers($user,$pass,'application/atom+xml'),null,['timeout'=>15]); if($response['status']===401) throw new RuntimeException('認証に失敗しました。HTTP 401'); if($response['status']===403) throw new RuntimeException('投稿先ブログへアクセスできません。HTTP 403'); if($response['status']===404) throw new RuntimeException('ルートエンドポイントが正しくありません。HTTP 404'); if($response['status']<200||$response['status']>=300) throw new RuntimeException('livedoorへ接続できませんでした。HTTP '.$response['status']); return '接続テストに成功しました。記事は作成していません。'; }
 function post_to_livedoor(string $title,string $body): array { $root=validate_livedoor_atompub_settings((string)setting('atompub_url','')); $url=$root.'/article'; $user=setting('livedoor_id',''); $pass=setting('api_password',''); if(!$root||!$user||!$pass) throw new RuntimeException('livedoor API設定が未入力です'); $response=http_request('POST',$url,livedoor_atompub_headers($user,$pass),atom_entry($title,$body),['timeout'=>20]); if($response['status']<200||$response['status']>=300) throw new RuntimeException('APIエラー HTTP '.$response['status']); $location=''; if(preg_match('/^Location:\s*(.+)$/im',$response['headers'],$matches)) $location=trim($matches[1]); return ['url'=>$location?:$url,'response'=>$response['body']]; }
@@ -133,7 +158,15 @@ function run_post(): int {
     if(!$items) throw new RuntimeException('投稿対象記事がありません');
     $main=choose_main($items);
     $title=clean_title($main['title']);
-    $body=body_html($items);
+    $uploadedMainImage='';
+    if(!empty($main['image_url'])){
+        try{
+            $uploadedMainImage=upload_image_to_livedoor((string)$main['image_url']);
+        }catch(Throwable $imageError){
+            log_event('warning','代表画像アップロードをスキップ',$imageError->getMessage());
+        }
+    }
+    $body=body_html($items,(int)$main['id'],$uploadedMainImage);
     $pdo=db();
     try{
         $result=post_to_livedoor($title,$body);
