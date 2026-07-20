@@ -1,5 +1,9 @@
 <?php
 require_once __DIR__.'/../app/bootstrap.php';
+
+if(!installed() || !database_available()){
+    redirect('/install/');
+}
 require_admin();
 
 $notice='';
