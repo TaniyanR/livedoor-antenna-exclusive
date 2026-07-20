@@ -20,7 +20,7 @@ function auto_setup(PDO $pdo,array $config): void { seed_settings($config['setti
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'); }
 function base_path(): string { $script=(string)($_SERVER['SCRIPT_NAME']??''); foreach(['/admin/','/install/','/cron/'] as $dir){ $pos=strpos($script,$dir); if($pos!==false) return rtrim(substr($script,0,$pos),'/'); } return rtrim(str_replace('\\','/',dirname($script)),'/'); }
 function app_url(string $path): string { return base_path().'/'.ltrim($path,'/'); }
-function livedoor_public_article_url(string $url): string { $url=trim($url); if($url==='' || !preg_match('#^https://livedoor\.blogcms\.jp/atompub/[^/]+/article/(\d+)(?:[/?#].*)?$#',$url,$matches)) return $url; $blogId=trim((string)setting('blog_id','')); if(!preg_match('/^[a-zA-Z0-9_-]+$/',$blogId)) return $url; return 'https://'.$blogId.'.livedoor.blog/archives/'.$matches[1].'.html'; }
+function livedoor_public_article_url(string $url): string { $url=trim($url); if($url==='' || !preg_match('~^https://livedoor\.blogcms\.jp/atompub/[^/]+/article/(\d+)(?:[/?#].*)?$~',$url,$matches)) return $url; $blogId=trim((string)setting('blog_id','')); if(!preg_match('/^[a-zA-Z0-9_-]+$/',$blogId)) return $url; return 'https://'.$blogId.'.livedoor.blog/archives/'.$matches[1].'.html'; }
 function request_scheme(): string { $https=strtolower((string)($_SERVER['HTTPS']??'')); return $https!==''&&$https!=='off'?'https':'http'; }
 function app_absolute_url(string $path): string { return request_scheme().'://'.($_SERVER['HTTP_HOST']??'localhost').app_url($path); }
 function redirect(string $url): never { header('Location: '.(str_starts_with($url,'/')?app_url($url):$url)); exit; }
