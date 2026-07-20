@@ -153,6 +153,51 @@ function validate_livedoor_atompub_settings(string $url): string { $url=rtrim(tr
 function livedoor_connection_test(): string { $url=validate_livedoor_atompub_settings((string)setting('atompub_url','')); $user=setting('livedoor_id',''); $pass=setting('api_password',''); if($user==='') throw new RuntimeException('livedoor ID（ログイン用）が入力されていません'); if($pass==='') throw new RuntimeException('AtomPub用パスワードが入力されていません'); $response=http_request('GET',$url,livedoor_atompub_headers($user,$pass,'application/atom+xml'),null,['timeout'=>15]); if($response['status']===401) throw new RuntimeException('認証に失敗しました。HTTP 401'); if($response['status']===403) throw new RuntimeException('投稿先ブログへアクセスできません。HTTP 403'); if($response['status']===404) throw new RuntimeException('ルートエンドポイントが正しくありません。HTTP 404'); if($response['status']<200||$response['status']>=300) throw new RuntimeException('livedoorへ接続できませんでした。HTTP '.$response['status']); return '接続テストに成功しました。記事は作成していません。'; }
 function post_to_livedoor(string $title,string $body): array { $root=validate_livedoor_atompub_settings((string)setting('atompub_url','')); $url=$root.'/article'; $user=setting('livedoor_id',''); $pass=setting('api_password',''); if(!$root||!$user||!$pass) throw new RuntimeException('livedoor API設定が未入力です'); $response=http_request('POST',$url,livedoor_atompub_headers($user,$pass),atom_entry($title,$body),['timeout'=>20]); if($response['status']<200||$response['status']>=300) throw new RuntimeException('APIエラー HTTP '.$response['status']); $location=''; if(preg_match('/^Location:\s*(.+)$/im',$response['headers'],$matches)) $location=trim($matches[1]); $publicUrl=''; if(preg_match('/<link\b(?=[^>]*\brel=["\x27]alternate["\x27])(?=[^>]*\bhref=["\x27]([^"\x27]+)["\x27])[^>]*>/i',(string)$response['body'],$matches)) $publicUrl=html_entity_decode($matches[1],ENT_QUOTES|ENT_HTML5,'UTF-8'); if(!valid_url($publicUrl)) $publicUrl=livedoor_public_article_url($location); return ['url'=>$publicUrl?:$location?:$url,'response'=>$response['body']]; }
 
+function livedoor_article_edit_url(string $storedUrl): string {
+    $storedUrl=trim($storedUrl);
+    if(preg_match('~^https://livedoor\.blogcms\.jp/atompub/[^/]+/article/(\d+)(?:[/?#].*)?$~',$storedUrl,$matches)){
+        $articleId=$matches[1];
+    }elseif(preg_match('~/archives/(\d+)\.html(?:[?#].*)?$~',$storedUrl,$matches)){
+        $articleId=$matches[1];
+    }else{
+        throw new RuntimeException('livedoor記事IDを確認できませんでした');
+    }
+    $root=validate_livedoor_atompub_settings((string)setting('atompub_url',''));
+    return $root.'/article/'.$articleId;
+}
+
+function update_livedoor_article(string $storedUrl,string $title,array $items): void {
+    if(!$items) throw new RuntimeException('掲載記事が0件になる更新はできません');
+    $url=livedoor_article_edit_url($storedUrl);
+    $user=(string)setting('livedoor_id','');
+    $pass=(string)setting('api_password','');
+    if($user==='' || $pass==='') throw new RuntimeException('livedoor API設定が未入力です');
+    $main=$items[0];
+    foreach($items as $item){
+        if(clean_title((string)$item['title'])===$title){ $main=$item; break; }
+    }
+    $uploadedMainImage='';
+    if(!empty($main['image_url'])){
+        try{
+            $uploadedMainImage=upload_image_to_livedoor((string)$main['image_url']);
+        }catch(Throwable $imageError){
+            log_event('warning','更新時の代表画像アップロードをスキップ',$imageError->getMessage());
+        }
+    }
+    $body=body_html($items,(int)$main['id'],$uploadedMainImage);
+    $response=http_request('PUT',$url,livedoor_atompub_headers($user,$pass),atom_entry($title,$body),['timeout'=>30]);
+    if($response['status']<200 || $response['status']>=300) throw new RuntimeException('livedoor記事の更新に失敗しました。HTTP '.$response['status']);
+}
+
+function delete_livedoor_article(string $storedUrl): void {
+    $url=livedoor_article_edit_url($storedUrl);
+    $user=(string)setting('livedoor_id','');
+    $pass=(string)setting('api_password','');
+    if($user==='' || $pass==='') throw new RuntimeException('livedoor API設定が未入力です');
+    $response=http_request('DELETE',$url,livedoor_atompub_headers($user,$pass,'application/atom+xml'),null,['timeout'=>30]);
+    if(($response['status']<200 || $response['status']>=300) && $response['status']!==404) throw new RuntimeException('livedoor記事の削除に失敗しました。HTTP '.$response['status']);
+}
+
 function run_post(): int {
     $items=select_articles(50);
     if(!$items) throw new RuntimeException('投稿対象記事がありません');
