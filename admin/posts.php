@@ -104,11 +104,6 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                     <?php if($selectedPost['livedoor_url']): ?>
                         <a class="button post-management-open" href="<?=e(livedoor_public_article_url($selectedPost['livedoor_url']))?>" target="_blank" rel="noopener noreferrer">公開ページ <span aria-hidden="true">↗</span></a>
                     <?php endif; ?>
-                    <form method="post" class="admin-ui-inline-form" onsubmit="return confirm('このlivedoor公開ページを削除します。掲載記事と管理画面の投稿履歴も削除され、元に戻せません。実行しますか？');">
-                        <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
-                        <input type="hidden" name="post_id" value="<?=e($selectedPost['id'])?>">
-                        <button class="post-delete-page" name="delete_post_page" value="1">ページを削除</button>
-                    </form>
                 </div>
             </div>
 
@@ -166,6 +161,7 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                                     <th>掲載件数</th>
                                     <th>結果</th>
                                     <th>公開ページ</th>
+                                    <th>削除</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -190,6 +186,12 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                                             -
                                         <?php endif; ?>
                                     </td>
+                                    <td class="post-management-delete">
+                                        <form method="post" class="admin-ui-inline-form" onsubmit="return confirm('このlivedoor公開ページを削除します。掲載記事と管理画面の投稿履歴も削除され、元に戻せません。実行しますか？');">
+                                            <input type="hidden" name="csrf" value="<?=e(csrf_token())?>">
+                                            <input type="hidden" name="post_id" value="<?=e($post['id'])?>">
+                                            <button class="post-delete-page" name="delete_post_page" value="1">削除</button>
+                                        </form>
                                 </tr>
                             <?php endforeach; ?>
                             </tbody>
