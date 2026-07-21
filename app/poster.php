@@ -11,14 +11,22 @@ function secure_shuffle(array $items): array {
 
 function select_articles(int $limit): array {
     $limit=max(1,min(50,$limit));
-    $rows=db()->query('SELECT a.*,f.site_name FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.selected=0 AND a.last_post_id IS NULL ORDER BY COALESCE(a.published_at,a.fetched_at) DESC LIMIT 1000')->fetchAll();
+    $pdo=db();
+    $rows=$pdo->query('SELECT a.*,f.site_name FROM articles a JOIN feeds f ON f.id=a.feed_id WHERE a.selected=0 AND a.last_post_id IS NULL ORDER BY COALESCE(a.published_at,a.fetched_at) DESC LIMIT 1000')->fetchAll();
+
+    $postedUrls=[];
+    foreach($pdo->query('SELECT url FROM articles WHERE selected=1 OR last_post_id IS NOT NULL')->fetchAll(PDO::FETCH_COLUMN) as $postedUrl){
+        $key=article_url_key((string)$postedUrl);
+        if($key!=='') $postedUrls[$key]=true;
+    }
 
     $groups=[];
     $seen=[];
     foreach($rows as $row){
         $url=(string)$row['url'];
-        if($url==='' || isset($seen[$url]) || !valid_url($url)) continue;
-        $seen[$url]=true;
+        $key=article_url_key($url);
+        if($key==='' || isset($seen[$key]) || isset($postedUrls[$key])) continue;
+        $seen[$key]=true;
         $groups[(int)$row['feed_id']][]=$row;
     }
     if(!$groups) return [];
