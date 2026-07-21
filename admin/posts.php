@@ -192,6 +192,7 @@ if($error) echo '<p class="notice error">'.e($error).'</p>';
                                             <input type="hidden" name="post_id" value="<?=e($post['id'])?>">
                                             <button class="post-delete-page" name="delete_post_page" value="1">削除</button>
                                         </form>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                             </tbody>
