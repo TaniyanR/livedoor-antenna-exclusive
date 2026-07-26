@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja" itemscope itemtype="http://schema.org/Blog">
+<head>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<$HeadSectionCommon$>
+<meta name="description" content="<$BlogDescription ESCAPE$>" />
+<$OGP$>
+<link rel="alternate" media="handheld" type="application/xhtml+xml" href="<$BlogMobileUrl$>" />
+<title><$BlogTitle ESCAPE$></title>
+<script src="<$PartsBaseUrl$>/js/usr/import.js"></script>
+</head>
+
+<body class="default_2012 page-index splash-index">
+
+<$BlogHeader$>
+
+<div id="wrapper">
+
+<header id="blog-header">
+  <div id="blog-header-inner">
+    <h1 id="blog-title">
+      <a href="<$BlogUrl$>"><$BlogTitle ESCAPE$></a>
+    </h1>
+  </div>
+</header>
+
+<main id="content">
+
+  <nav class="splash-pager splash-pager-top">
+    <SetVar NavigatorType>2</SetVar>
+    <SetVar NavigatorPrevPageText>&laquo;</SetVar>
+    <SetVar NavigatorNextPageText>次へ</SetVar>
+    <$IndexNavigator$>
+  </nav>
+
+  <section class="splash-card-list">
+
+    <IndexArticlesLoop>
+
+      <article class="splash-index-card">
+        <a class="splash-index-card-link" href="<$ArticlePermalink$>"
+          style="position: relative; box-sizing: border-box; padding-bottom: 37px;">
+
+          <div class="splash-index-image">
+            <IfArticleCoverImage>
+              <SetVar ThumbnailHeight>380</SetVar>
+              <SetVar ThumbnailWidth>600</SetVar>
+              <img
+                src="<$ArticleCoverImageThumbnail$>"
+                alt="<$ArticleTitle ESCAPE$>"
+                loading="lazy"
+              >
+            </IfArticleCoverImage>
+          </div>
+
+          <h2 class="splash-index-title"
+            style="display: block !important; box-sizing: border-box; overflow: hidden;">
+            <span class="splash-index-title-text"
+              style="display: -webkit-box; width: 100%; max-width: 100%; max-height: 6em; overflow: hidden; line-height: 1.5; text-overflow: ellipsis; white-space: normal; word-break: break-word; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 4;"><$ArticleTitle ESCAPE$></span>
+          </h2>
+
+          <div class="splash-index-date"
+            style="position: absolute; right: 0; bottom: 0; left: 0; box-sizing: border-box; height: 37px; padding: 9px 14px; border-top: 1px solid #e5e7eb; background: #ffffff; color: #6b7280; font-size: 12px; font-weight: 500; line-height: 18px; text-align: left; white-space: nowrap;">
+            取得日：<$ArticleDate$>
+          </div>
+
+        </a>
+      </article>
+
+    </IndexArticlesLoop>
+
+  </section>
+
+  <nav class="splash-pager splash-pager-bottom">
+    <SetVar NavigatorType>2</SetVar>
+    <SetVar NavigatorPrevPageText>&laquo;</SetVar>
+    <SetVar NavigatorNextPageText>次へ</SetVar>
+    <$IndexNavigator$>
+  </nav>
+
+</main>
+
+<footer id="blog-footer">
+  <div class="splash-footer-inner">
+    <a href="https://splashr.blog.jp/archives/14114691.html">スプラッシュについて</a>
+    <a href="https://splashr.blog.jp/archives/14114703.html">Privacy Policy</a>
+    <a href="https://message.blogcms.jp/livedoor/toolhouse-hbs1jlre/message">お問い合わせ</a>
+  </div>
+</footer>
+
+</div>
+
+</body>
+</html>
