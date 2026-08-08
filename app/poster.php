@@ -92,8 +92,34 @@ function choose_main(array $items): array {
 
 function safe_link(string $url): string { return valid_url($url)?$url:''; }
 
+function antenna_card_html(array $item, string $uploadedImage=''): string {
+    $url=safe_link((string)$item['url']);
+    if($url==='') return '';
+
+    $title=trim((string)$item['title']);
+    $site=trim((string)($item['site_name']??''));
+    $image=$uploadedImage!==''?$uploadedImage:safe_link((string)($item['image_url']??''));
+    $html='<a class="la-antenna-card" href="'.e($url).'" target="_blank" rel="noopener noreferrer">';
+    if($image!==''){
+        $html.='<span class="la-antenna-image"><img src="'.e($image).'" alt="'.e($title).'" loading="lazy"></span>';
+    }else{
+        $html.='<span class="la-antenna-image la-antenna-noimage">画像なし</span>';
+    }
+    $html.='<span class="la-antenna-body">';
+    if($site!=='') $html.='<span class="la-antenna-site">'.e($site).'</span>';
+    return $html.'<span class="la-antenna-title">'.e($title).'</span></span></a>';
+}
+
 function body_html(array $items, int $mainArticleId=0, string $uploadedMainImage=''): string {
     $style='<style>'
+        .'.la-antenna-featured{box-sizing:border-box;width:100%;max-width:1500px;margin:12px auto 16px;padding:0 6px}'
+        .'.la-antenna-featured .la-antenna-card{display:grid!important;grid-template-columns:minmax(280px,38%) minmax(0,1fr);width:100%!important;min-height:240px!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}'
+        .'.la-antenna-featured .la-antenna-image{width:100%!important;height:240px!important;min-height:240px!important;border:0!important;background:#fff!important}'
+        .'.la-antenna-featured .la-antenna-image img{background:#fff!important}'
+        .'.la-antenna-featured .la-antenna-body{justify-content:flex-start;padding:16px 32px 24px!important;background:transparent!important}'
+        .'.la-antenna-featured .la-antenna-body:before{content:"PICK UP";position:static;display:block;align-self:flex-start;margin:0 0 16px;padding:8px 12px;border-radius:999px;background:#123a63;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;line-height:1}'
+        .'.la-antenna-featured .la-antenna-site{margin-bottom:10px!important;color:#0b4f8a!important;font-size:14px!important;font-weight:600}'
+        .'.la-antenna-featured .la-antenna-title{font-size:24px!important;line-height:1.55!important}'
         .'.la-antenna-grid{box-sizing:border-box;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;width:100%;max-width:1500px;margin:0 auto;padding:12px 6px}'
         .'.la-antenna-card{box-sizing:border-box;display:flex!important;min-width:0;flex-direction:column;overflow:hidden;border:1px solid #ddd;border-radius:10px;background:#fff!important;color:#111!important;text-decoration:none!important;box-shadow:0 2px 8px rgba(0,0,0,.12)}'
         .'.la-antenna-image{display:flex;width:100%;height:180px;align-items:center;justify-content:center;overflow:hidden;background:#111}'
@@ -104,31 +130,27 @@ function body_html(array $items, int $mainArticleId=0, string $uploadedMainImage
         .'.la-antenna-title{display:-webkit-box;overflow:hidden;color:#111;font-size:16px;font-weight:700;line-height:1.55;word-break:break-word;-webkit-box-orient:vertical;-webkit-line-clamp:4}'
         .'#comments,#comment-form,.comment-form,.article-comment,.article-comments{display:none!important}'
         .'@media(max-width:1100px){.la-antenna-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}'
-        .'@media(max-width:820px){.la-antenna-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.la-antenna-image{height:150px}}'
-        .'@media(max-width:480px){.la-antenna-grid{grid-template-columns:1fr}.la-antenna-image{height:190px}}'
+        .'@media(max-width:820px){.la-antenna-featured{margin:10px auto 12px;padding:0}.la-antenna-featured .la-antenna-card{display:flex!important;min-height:0!important;flex-direction:column!important}.la-antenna-featured .la-antenna-image{height:220px!important;min-height:220px!important}.la-antenna-featured .la-antenna-body{justify-content:flex-start;padding:18px 4px!important}.la-antenna-featured .la-antenna-body:before{position:static;margin-bottom:18px}.la-antenna-featured .la-antenna-title{font-size:18px!important}.la-antenna-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.la-antenna-image{height:150px}}'
+        .'@media(max-width:480px){.la-antenna-featured .la-antenna-image{height:190px!important;min-height:190px!important}.la-antenna-grid{grid-template-columns:1fr}.la-antenna-image{height:190px}}'
         .'</style>';
 
-    $html=$style.'<div class="la-antenna-grid">';
+    $mainCard='';
+    $cards=[];
     $seen=[];
     foreach(array_slice($items,0,50) as $item){
         $url=safe_link((string)$item['url']);
         if($url==='' || isset($seen[$url])) continue;
         $seen[$url]=true;
-        $title=trim((string)$item['title']);
-        $site=trim((string)($item['site_name']??''));
-        $image=safe_link((string)($item['image_url']??''));
-        if((int)$item['id']===$mainArticleId && $uploadedMainImage!=='') $image=$uploadedMainImage;
-        $html.='<a class="la-antenna-card" href="'.e($url).'" target="_blank" rel="noopener noreferrer">';
-        if($image!==''){
-            $html.='<span class="la-antenna-image"><img src="'.e($image).'" alt="'.e($title).'" loading="lazy"></span>';
+        if((int)$item['id']===$mainArticleId){
+            $mainCard=antenna_card_html($item,$uploadedMainImage);
         }else{
-            $html.='<span class="la-antenna-image la-antenna-noimage">画像なし</span>';
+            $cards[]=antenna_card_html($item);
         }
-        $html.='<span class="la-antenna-body">';
-        if($site!=='') $html.='<span class="la-antenna-site">'.e($site).'</span>';
-        $html.='<span class="la-antenna-title">'.e($title).'</span></span></a>';
     }
-    return $html.'</div>';
+
+    $html=$style;
+    if($mainCard!=='') $html.='<div class="la-antenna-featured">'.$mainCard.'</div>';
+    return $html.'<div class="la-antenna-grid">'.implode('',$cards).'</div>';
 }
 
 function atom_entry(string $title,string $body): string { return '<?xml version="1.0" encoding="utf-8"?><entry xmlns="http://www.w3.org/2005/Atom"><title>'.e($title).'</title><content type="html">'.e($body).'</content><updated>'.date('c').'</updated></entry>'; }
