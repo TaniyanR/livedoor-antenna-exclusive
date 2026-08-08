@@ -764,16 +764,11 @@ ul.archives-pager li a:hover {
   background: #111111 !important;
 }
 
+.splash-index-image img,
 .la-antenna-image img,
 .splash-card-image img,
 .antenna-imgbox img {
   object-fit: contain !important;
-  background: #111111 !important;
-}
-
-/* トップ一覧は画像比率の違いによる大きな余白を作らず、枠いっぱいに表示 */
-.splash-index-image img {
-  object-fit: cover !important;
   background: #111111 !important;
 }
 
