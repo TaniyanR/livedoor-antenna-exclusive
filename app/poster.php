@@ -117,7 +117,7 @@ function body_html(array $items, int $mainArticleId=0, string $uploadedMainImage
         .'.la-antenna-featured .la-antenna-image{width:100%!important;height:240px!important;min-height:240px!important;border:0!important;background:#fff!important}'
         .'.la-antenna-featured .la-antenna-image img{background:#fff!important}'
         .'.la-antenna-featured .la-antenna-body{position:relative;justify-content:center;padding:48px 32px 24px!important;background:transparent!important}'
-        .'.la-antenna-featured .la-antenna-body:before{content:"PICK UP";position:absolute;top:0;left:32px;display:block;margin:0;padding:8px 12px;border-radius:999px;background:#123a63;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;line-height:1}'
+        .'.la-antenna-featured .la-antenna-body:before{content:"PICK UP";position:absolute;top:16px;left:32px;display:block;margin:0;padding:8px 12px;border-radius:999px;background:#123a63;color:#fff;font-size:11px;font-weight:700;letter-spacing:.08em;line-height:1}'
         .'.la-antenna-featured .la-antenna-site{margin-bottom:10px!important;color:#0b4f8a!important;font-size:14px!important;font-weight:600}'
         .'.la-antenna-featured .la-antenna-title{font-size:24px!important;line-height:1.55!important}'
         .'.la-antenna-grid{box-sizing:border-box;display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px;width:100%;max-width:1500px;margin:0 auto;padding:12px 6px}'
