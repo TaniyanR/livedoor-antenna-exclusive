@@ -368,6 +368,17 @@ img {
   padding: 0 !important;
 }
 
+/* トップページの代表カードを、個別ページでも一覧の上へ1件だけ表示 */
+.la-antenna-featured {
+  display: grid !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  align-items: stretch;
+  gap: 16px !important;
+  width: 100% !important;
+  margin: 0 0 16px !important;
+  padding: 0 !important;
+}
+
 .la-antenna-card,
 .splash-card,
 .antenna-card {
@@ -617,6 +628,7 @@ ul.archives-pager li a:hover {
   }
 
   .splash-card-list,
+  .la-antenna-featured,
   .la-antenna-grid,
   .splash-grid,
   .antenna-grid {
@@ -653,6 +665,7 @@ ul.archives-pager li a:hover {
   }
 
   .splash-card-list,
+  .la-antenna-featured,
   .la-antenna-grid,
   .splash-grid,
   .antenna-grid {
@@ -724,6 +737,7 @@ ul.archives-pager li a:hover {
   }
 
   .la-antenna-grid,
+  .la-antenna-featured,
   .splash-grid,
   .antenna-grid {
     grid-template-columns: 1fr !important;
@@ -750,11 +764,16 @@ ul.archives-pager li a:hover {
   background: #111111 !important;
 }
 
-.splash-index-image img,
 .la-antenna-image img,
 .splash-card-image img,
 .antenna-imgbox img {
   object-fit: contain !important;
+  background: #111111 !important;
+}
+
+/* トップ一覧は画像比率の違いによる大きな余白を作らず、枠いっぱいに表示 */
+.splash-index-image img {
+  object-fit: cover !important;
   background: #111111 !important;
 }
 
