@@ -98,6 +98,47 @@ img {
   color: #0b4f8a;
 }
 
+.splash-header-links {
+  display: flex;
+  margin-left: auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.splash-header-link {
+  display: inline-flex;
+  min-height: 38px;
+  padding: 8px 14px;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  color: #123a63;
+  border: 1px solid #b8c7d8;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.splash-header-link:hover {
+  background: #edf4fb;
+  color: #0b4f8a;
+  border-color: #0b4f8a;
+}
+
+.splash-header-link-site {
+  background: #123a63;
+  color: #ffffff;
+  border-color: #123a63;
+}
+
+.splash-header-link-site:hover {
+  background: #0b4f8a;
+  color: #ffffff;
+  border-color: #0b4f8a;
+}
+
 #blog-description,
 .ldb_menu {
   display: none;
@@ -644,6 +685,16 @@ ul.archives-pager li a:hover {
     font-size: 27px;
   }
 
+  .splash-header-links {
+    gap: 6px;
+  }
+
+  .splash-header-link {
+    min-height: 34px;
+    padding: 7px 9px;
+    font-size: 11px;
+  }
+
   #content,
   .page-index #content,
   .page-article #content {
@@ -709,6 +760,24 @@ ul.archives-pager li a:hover {
   .splash-pager-bottom,
   .splash-article-pager {
     margin-top: 18px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  #blog-title {
+    font-size: 24px;
+  }
+
+  .splash-header-links {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .splash-header-link {
+    min-height: 28px;
+    padding: 4px 7px;
+    font-size: 10px;
   }
 }
 
